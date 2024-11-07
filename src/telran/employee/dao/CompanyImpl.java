@@ -3,6 +3,7 @@ package telran.employee.dao;
 import telran.employee.model.Employee;
 import telran.employee.model.SalesManager;
 
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 public class CompanyImpl implements Company {
@@ -18,7 +19,7 @@ public class CompanyImpl implements Company {
         if (employee == null || size == employees.length || findEmployee(employee.getId()) != null) {
             return false;
         }
-        employees[size++] = employee;// постфикс запись (++ после)
+        employees[size++] = employee;
         return true;
     }
 
@@ -28,8 +29,8 @@ public class CompanyImpl implements Company {
         for (int i = 0; i < size; i++) {
             if (employees[i].getId() == id) {
                 victim = employees[i];
-                employees[i] = employees[--size];// префикс запись (-- сначала)
-                employees[size] = null;
+                System.arraycopy(employees, i + 1, employees, i, size - i - 1);
+                employees[--size] = null;
                 break;
             }
         }
@@ -82,50 +83,22 @@ public class CompanyImpl implements Company {
 
     @Override
     public Employee[] findEmployeesHoursGreaterThan(int hours) {
-        Predicate<Employee> predicate = new Predicate<Employee>() {
-            @Override
-            public boolean test(Employee employee) {
-                return employee.getHours() > hours;
-            }
-        };
-        return findEmployeesByPredicate(predicate);
+        return findEmployeesByPredicate(e -> e.getHours() > hours);
     }
-    /*
-    public Employee[] findEmployeesHoursGreaterThan(int hours) {
-        int count = 0;
-        for (int i = 0; i < size ; i++) {
-            if (employees[i].getHours() > hours) {
-               count++;
-            }
-        }
-        Employee[] res = new Employee[count];
-        for (int i = 0,j = 0; i < res.length ; i++) {
-            if (employees[i].getHours() > hours) {
-                res[j++] = employees[i];// j - index для массива res; i- index для массива count
-            }
-        }
-        return res;
-    }
-     */
 
     @Override
     public Employee[] findEmployeesSalaryBetween(int minSalary, int maxSalary) {
         return findEmployeesByPredicate(e -> e.calcSalary() >= minSalary && e.calcSalary() < maxSalary);
     }
 
-    private Employee[] findEmployeesByPredicate(Predicate<Employee> predicate){
-        int count = 0;
+    private Employee[] findEmployeesByPredicate(Predicate<Employee> predicate) {
+        Employee[] res = new Employee[size];
+        int j = 0;
         for (int i = 0; i < size; i++) {
-            if (predicate.test(employees[i])) {
-                count++;
-            }
-        }
-        Employee[] res = new Employee[count];
-        for (int i = 0, j = 0; j < res.length; i++) {
             if (predicate.test(employees[i])) {
                 res[j++] = employees[i];
             }
         }
-        return res;
+        return Arrays.copyOf(res, j);
     }
 }
